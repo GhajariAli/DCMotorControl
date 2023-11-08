@@ -118,18 +118,11 @@ int main(void)
 	  else{
 		  TIM1->CCR1=0;
 	  }
-	  int trottle=0;
-	  if (receivedSBUS.ch[1]>1000 && receivedSBUS.ch[1]<2000){
-		  trottle=(receivedSBUS.ch[1]-1000)*1000/800;
-		  //TIM1->CCR1=trottle;
-	  }
-	  else if (receivedSBUS.ch[1]>0 && receivedSBUS.ch[1]<950){
-		  trottle=(-receivedSBUS.ch[1]+950)*1000/750;
-		  //TIM1->CCR1=trottle;
-	  }
-	  else{
-		  //TIM1->CCR1=0;
-	  }
+	  int EncoderA = 0;
+	  int EncoderB = 0;
+	  int EncoderAState = 0;
+	  int EncoderBState = 0;
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -372,6 +365,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : encoder_A_Pin encoder_B_Pin */
+  GPIO_InitStruct.Pin = encoder_A_Pin|encoder_B_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
