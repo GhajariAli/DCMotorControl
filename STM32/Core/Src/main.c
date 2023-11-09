@@ -110,6 +110,16 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  int CW=0;
+  int CCW=0;
+  int CWDirectionFlag=0;
+  int CCWDirectionFlag=0;
+  int EncoderAValue = 0;
+  int EncoderBValue = 0;
+  int EncoderAState = 0;
+  int EncoderBState = 0;
+  int EncoderAPrevState = 0;
+  int EncoderBPrevState = 0;
   while (1)
   {
 	  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
@@ -118,11 +128,34 @@ int main(void)
 	  else{
 		  TIM1->CCR1=0;
 	  }
-	  int EncoderA = 0;
-	  int EncoderB = 0;
-	  int EncoderAState = 0;
-	  int EncoderBState = 0;
-
+	  HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_6) ? (EncoderAState=1) : (EncoderAState=0);
+	  HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) ? (EncoderBState=1) : (EncoderBState=0);
+	  if(EncoderAState && !EncoderBState) {
+		  CWDirectionFlag=1;
+		  CCWDirectionFlag=0;
+	  }
+	  if (EncoderBState && !EncoderAState){
+		  CCWDirectionFlag=1;
+		  CWDirectionFlag=0;
+	  }
+	  if (CWDirectionFlag && EncoderBState){
+		  CW=1;
+		  CCW=0;
+	  }
+	  if (CCWDirectionFlag && EncoderAState){
+		  CW=0;
+		  CCW=1;
+	  }
+	  if (EncoderAState ==1 && EncoderAPrevState==0) {
+		  if (CW) {EncoderAValue++;}
+		  if (CCW) { EncoderAValue--;}
+	  }
+	  EncoderAPrevState=EncoderAState;
+	  if (EncoderBState ==1 && EncoderBPrevState==0) {
+		  if (CW) {EncoderBValue++;}
+		  if (CCW) { EncoderBValue--;}
+	  }
+	  EncoderBPrevState=EncoderBState;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
