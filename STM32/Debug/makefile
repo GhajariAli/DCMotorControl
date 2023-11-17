@@ -60,8 +60,8 @@ all: main-build
 main-build: DCMotor.elf secondary-outputs
 
 # Tool invocations
-DCMotor.elf DCMotor.map: $(OBJS) $(USER_OBJS) C:\Repo\DCMotorControl\STM32\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "DCMotor.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Repo\DCMotorControl\STM32\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="DCMotor.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+DCMotor.elf DCMotor.map: $(OBJS) $(USER_OBJS) C:\Repos\MotorControl\STM32\STM32F411RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "DCMotor.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m4 -T"C:\Repos\MotorControl\STM32\STM32F411RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="DCMotor.map" -Wl,--gc-sections -static --specs=nano.specs -mfpu=fpv4-sp-d16 -mfloat-abi=hard -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+#include "stdint.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "Sbus.h"
@@ -27,6 +27,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
 tsbus receivedSBUS;
+uint32_t SystemTime = 0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -106,56 +107,76 @@ int main(void)
   HAL_UART_Receive_DMA(&huart1, &receivedSBUS.ReceivedData[0], SBUS_LEN);
   HAL_TIM_Base_Start_IT(&htim1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  SystemTime=HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int CW=0;
-  int CCW=0;
-  int CWDirectionFlag=0;
-  int CCWDirectionFlag=0;
-  int EncoderAValue = 0;
-  int EncoderBValue = 0;
+  enum direction {
+	  CW=1,
+	  CCW=2,
+  };
+
   int EncoderAState = 0;
   int EncoderBState = 0;
-  int EncoderAPrevState = 0;
-  int EncoderBPrevState = 0;
+  int EncoderGrayCode=0;
+  int EncoderState[4]={0,0,0,0};
+  int EncoderLastState=0;
+  enum direction direction;
+  int32_t EncoderValue = 0;
+  int32_t PreviousEncoderValue = 0;
+  int32_t SpeedRPM = 0;
+
   while (1)
   {
+	  //reading SBUS from remote controller and writing PWM output
 	  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
 		  TIM1->CCR1 = ((receivedSBUS.ch[2]-200)/2)*1000/700;
 	  }
 	  else{
 		  TIM1->CCR1=0;
 	  }
+	  //reading encoder value as gray code
 	  HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_6) ? (EncoderAState=1) : (EncoderAState=0);
 	  HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7) ? (EncoderBState=1) : (EncoderBState=0);
-	  if(EncoderAState && !EncoderBState) {
-		  CWDirectionFlag=1;
-		  CCWDirectionFlag=0;
+	  EncoderGrayCode= ( EncoderAState<<1 | EncoderBState ) & 0x03;
+	  //if encoder value updated
+	  if (EncoderLastState != EncoderGrayCode){
+		  for (int i=3;i>0;i--){
+			  EncoderState[i]= EncoderState[i-1];
+		  }
+		  EncoderState[0]= EncoderGrayCode;
+		  //check direction of rotation
+		  for (int i=0; i<4 ; i++){
+			  if (EncoderState[i]==3){
+				  switch (i){
+					  case 0:
+						  if (EncoderState[1]==2) direction=CCW;
+						  else if (EncoderState[3]==2) direction=CW;
+					  case 3:
+						  if (EncoderState[2]==2) direction=CCW;
+						  else if (EncoderState[0]==2) direction=CW;
+					  default:
+						  if (EncoderState[i+1]==2) direction=CCW;
+						  else if (EncoderState[i-1]==2) direction=CW;
+				  }
+			  }
+			  break;
+		  }
+		  if (direction == CW) EncoderValue++;
+		  else if (direction == CCW) EncoderValue--;
+		  EncoderLastState=EncoderGrayCode;
 	  }
-	  if (EncoderBState && !EncoderAState){
-		  CCWDirectionFlag=1;
-		  CWDirectionFlag=0;
+	  //Calculate RPM every 100msec
+	  if (HAL_GetTick()-SystemTime==100){
+		  SpeedRPM=(EncoderValue-PreviousEncoderValue)*10*60/1024/4;//10 for 100ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
+		  PreviousEncoderValue=EncoderValue;
+		  SystemTime=HAL_GetTick();
+		  char message[10];
+		  sprintf(message,"%d\n",SpeedRPM);
+		  HAL_UART_Transmit(&huart2, message, 7, 80);
 	  }
-	  if (CWDirectionFlag && EncoderBState){
-		  CW=1;
-		  CCW=0;
-	  }
-	  if (CCWDirectionFlag && EncoderAState){
-		  CW=0;
-		  CCW=1;
-	  }
-	  if (EncoderAState ==1 && EncoderAPrevState==0) {
-		  if (CW) {EncoderAValue++;}
-		  if (CCW) { EncoderAValue--;}
-	  }
-	  EncoderAPrevState=EncoderAState;
-	  if (EncoderBState ==1 && EncoderBPrevState==0) {
-		  if (CW) {EncoderBValue++;}
-		  if (CCW) { EncoderBValue--;}
-	  }
-	  EncoderBPrevState=EncoderBState;
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
