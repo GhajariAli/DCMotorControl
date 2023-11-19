@@ -119,13 +119,13 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.3;
-  PID.Ki=0.01;
-  PID.Kd=0.5;
+  PID.Kp=0.4;
+  PID.Ki=0.001;
+  PID.Kd=0.01;
   PID.dt=0.002;
   PID.integral=0;
   PID.min_output=0;
-  PID.max_output=2000;
+  PID.max_output=1000;
   PID.output=0;
   PID.target=250;
   /* USER CODE END 2 */

@@ -34,5 +34,9 @@ void GetEncoderValue(encoder_data *encoder){
 		  if (encoder->direction == CW) encoder->EncoderValue++;
 		  else if (encoder->direction == CCW) encoder->EncoderValue--;
 		  encoder->EncoderLastState=EncoderGrayCode;
+		  if(encoder->EncoderValue>2147483646){
+			  encoder->EncoderValue=0;
+			  encoder->PreviousEncoderValue=0;
+		  }
 	  }
 }
