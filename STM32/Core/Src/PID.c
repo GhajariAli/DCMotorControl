@@ -23,8 +23,3 @@ void updatePID(PID_Controller* pid, double current) {
     }
     pid->prev_error = error;
 }
-
-void resetPID(PID_Controller *pid) {
-    pid->integral = 0;
-    pid->prev_error = 0;
-}

@@ -13,4 +13,3 @@ typedef struct{
 
 void updatePID(PID_Controller* pid, double current);
 
-void resetPID(PID_Controller *pid);
