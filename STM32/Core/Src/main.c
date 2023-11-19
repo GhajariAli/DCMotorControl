@@ -33,6 +33,7 @@ tsbus receivedSBUS;
 uint32_t SystemTime = 0;
 encoder_data TestEncoder;
 PID_Controller PID;
+int speedChangerPulse=0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -126,7 +127,7 @@ int main(void)
   PID.min_output=0;
   PID.max_output=2000;
   PID.output=0;
-  PID.target=0;
+  PID.target=300;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -154,7 +155,13 @@ int main(void)
 			  sprintf(&message,"%d\n",TestEncoder.SpeedRPM);
 			  HAL_UART_Transmit(&huart2, message, 7, 80);
 			  messageIndex=0;
+			  speedChangerPulse++;
 		  }
+	  }
+	  if(speedChangerPulse==5){
+		  if(PID.target==300) PID.target=500;
+		  else if (PID.target==500) PID.target=300;
+		  speedChangerPulse=0;
 	  }
 	  updatePID(&PID, TestEncoder.SpeedRPM);
 	  TIM1->CCR1=PID.output;
