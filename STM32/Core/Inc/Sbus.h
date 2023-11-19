@@ -1,6 +1,5 @@
 #include "stdint.h"
 
-#define UART_MAX_CHAR 300
 #define SBUS_LEN 25
 #define SBUS_CHANNELS 18
 
