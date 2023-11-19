@@ -119,7 +119,7 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.2;
+  PID.Kp=0.3;
   PID.Ki=0.01;
   PID.Kd=0.5;
   PID.dt=0.002;
@@ -127,7 +127,7 @@ int main(void)
   PID.min_output=0;
   PID.max_output=2000;
   PID.output=0;
-  PID.target=300;
+  PID.target=250;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -150,17 +150,17 @@ int main(void)
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
 		  messageIndex++;
-		  if(messageIndex==500){
+		  if(messageIndex==50){
 			  char message[10];
-			  sprintf(&message,"%d\n",TestEncoder.SpeedRPM);
-			  HAL_UART_Transmit(&huart2, message, 7, 80);
+			  sprintf(&message,"G1=%d ,\n",TestEncoder.SpeedRPM);
+			  HAL_UART_Transmit(&huart2, message, 9, 80);
 			  messageIndex=0;
 			  speedChangerPulse++;
 		  }
 	  }
-	  if(speedChangerPulse==5){
-		  if(PID.target==300) PID.target=500;
-		  else if (PID.target==500) PID.target=300;
+	  if(speedChangerPulse==50){
+		  if(PID.target==250) PID.target=700;
+		  else if (PID.target==700) PID.target=250;
 		  speedChangerPulse=0;
 	  }
 	  updatePID(&PID, TestEncoder.SpeedRPM);
