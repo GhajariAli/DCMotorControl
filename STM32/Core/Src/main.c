@@ -37,6 +37,7 @@ int speedChangerPulse=0;
 int messageUpdateTime=0;
 int speedUpdateTime=0;
 int uart2Free=1;
+int ToggleSetpointInput=0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -128,14 +129,14 @@ int main(void)
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
   PID.Kp=0.2;
-  PID.Ki=0.01;
+  PID.Ki=0.001;
   PID.Kd=0;
   PID.dt=0.002;
   PID.integral=0;
   PID.min_output=0;
   PID.max_output=1000;
   PID.output=0;
-  PID.target=250;
+  PID.target=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -144,12 +145,29 @@ int main(void)
   while (1)
   {
 	  //reading SBUS from remote controller and writing PWM output
-//	  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
-//		  TIM1->CCR1 = ((receivedSBUS.ch[2]-200)/2)*1000/700;
-//	  }
-//	  else{
-//		  TIM1->CCR1=0;
-//	  }
+	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){
+		  while(!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){}
+		  if (ToggleSetpointInput==0){ToggleSetpointInput=1;}
+		  else if (ToggleSetpointInput==1){
+			  ToggleSetpointInput=0;
+			  PID.target=250;
+		  }
+	  }
+	  if (ToggleSetpointInput){
+		  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
+			  PID.target = ((receivedSBUS.ch[2]-200)/2)*1000/700;
+		  }
+		  else{
+			  PID.target=0;
+		  }
+	  }
+	  else if(!ToggleSetpointInput){
+		  if(HAL_GetTick()-speedUpdateTime>=10000){
+	 		  if(PID.target==250) PID.target=500;
+	 		  else if (PID.target==500) PID.target=250;
+	 		  speedUpdateTime=HAL_GetTick();
+		  }
+	  }
 	  GetEncoderValue(&TestEncoder);
 	  //Calculate RPM
 	  if (HAL_GetTick()-SystemTime>=2){
@@ -166,11 +184,6 @@ int main(void)
 			  uart2Free=0;
 		  }
 		  messageUpdateTime=HAL_GetTick();
-	  }
-	  if(HAL_GetTick()-speedUpdateTime>=10000){
-		  if(PID.target==250) PID.target=500;
-		  else if (PID.target==500) PID.target=250;
-		  speedUpdateTime=HAL_GetTick();
 	  }
 	  updatePID(&PID, TestEncoder.SpeedRPM);
 	  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
@@ -406,8 +419,8 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
