@@ -122,7 +122,7 @@ int main(void)
   HAL_TIM_Base_Start_IT(&htim1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   SystemTime=HAL_GetTick();
-  TestEncoder.EncoderLastState=0;
+  TestEncoder.PreviusGrayCode=0;
   TestEncoder.EncoderValue=0;
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
@@ -151,13 +151,13 @@ int main(void)
 //		  TIM1->CCR1=0;
 //	  }
 	  GetEncoderValue(&TestEncoder);
-	  //Calculate RPM every 100msec
+	  //Calculate RPM
 	  if (HAL_GetTick()-SystemTime>=2){
 		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
 	  }
-	  if (HAL_GetTick()-messageUpdateTime>=100){
+	  if (HAL_GetTick()-messageUpdateTime>=10){
 		  char message[50];
 		  int messagaLen=0;
 		  messagaLen=sprintf(&message,"G1=%ld T1=%ld ,\n",TestEncoder.SpeedRPM,messageUpdateTime);

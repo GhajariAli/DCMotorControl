@@ -1985,13 +1985,13 @@ int main(void)
  800147c:	4a43      	ldr	r2, [pc, #268]	; (800158c <main+0x224>)
  800147e:	6013      	str	r3, [r2, #0]
 	  }
-	  if (HAL_GetTick()-messageUpdateTime>=100){
+	  if (HAL_GetTick()-messageUpdateTime>=10){
  8001480:	f000 fcea 	bl	8001e58 <HAL_GetTick>
  8001484:	4603      	mov	r3, r0
  8001486:	4a46      	ldr	r2, [pc, #280]	; (80015a0 <main+0x238>)
  8001488:	6812      	ldr	r2, [r2, #0]
  800148a:	1a9b      	subs	r3, r3, r2
- 800148c:	2b63      	cmp	r3, #99	; 0x63
+ 800148c:	2b09      	cmp	r3, #9
  800148e:	d91e      	bls.n	80014ce <main+0x166>
 		  char message[50];
 		  int messagaLen=0;
