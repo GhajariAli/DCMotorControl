@@ -1953,7 +1953,7 @@ int main(void)
  800144c:	4b64      	ldr	r3, [pc, #400]	; (80015e0 <main+0x1f0>)
  800144e:	2201      	movs	r2, #1
  8001450:	711a      	strb	r2, [r3, #4]
-  PID.Kp=0.2;
+  PID.Kp=0.15;
  8001452:	4964      	ldr	r1, [pc, #400]	; (80015e4 <main+0x1f4>)
  8001454:	a358      	add	r3, pc, #352	; (adr r3, 80015b8 <main+0x1c8>)
  8001456:	e9d3 2300 	ldrd	r2, r3, [r3]
@@ -1968,7 +1968,7 @@ int main(void)
  800146c:	f04f 0200 	mov.w	r2, #0
  8001470:	f04f 0300 	mov.w	r3, #0
  8001474:	e9c1 2304 	strd	r2, r3, [r1, #16]
-  PID.dt=0.002;
+  PID.dt=0.01;
  8001478:	495a      	ldr	r1, [pc, #360]	; (80015e4 <main+0x1f4>)
  800147a:	a353      	add	r3, pc, #332	; (adr r3, 80015c8 <main+0x1d8>)
  800147c:	e9d3 2300 	ldrd	r2, r3, [r3]
@@ -2119,12 +2119,12 @@ int main(void)
  80015b0:	e039      	b.n	8001626 <main+0x236>
  80015b2:	bf00      	nop
  80015b4:	f3af 8000 	nop.w
- 80015b8:	9999999a 	.word	0x9999999a
- 80015bc:	3fc99999 	.word	0x3fc99999
+ 80015b8:	33333333 	.word	0x33333333
+ 80015bc:	3fc33333 	.word	0x3fc33333
  80015c0:	d2f1a9fc 	.word	0xd2f1a9fc
  80015c4:	3f50624d 	.word	0x3f50624d
- 80015c8:	d2f1a9fc 	.word	0xd2f1a9fc
- 80015cc:	3f60624d 	.word	0x3f60624d
+ 80015c8:	47ae147b 	.word	0x47ae147b
+ 80015cc:	3f847ae1 	.word	0x3f847ae1
  80015d0:	200001f4 	.word	0x200001f4
  80015d4:	200002f4 	.word	0x200002f4
  80015d8:	200002ac 	.word	0x200002ac
@@ -2163,21 +2163,21 @@ int main(void)
  8001632:	4837      	ldr	r0, [pc, #220]	; (8001710 <main+0x320>)
  8001634:	f7ff fe60 	bl	80012f8 <GetEncoderValue>
 	  //Calculate RPM
-	  if (HAL_GetTick()-SystemTime>=2){
+	  if (HAL_GetTick()-SystemTime>=10){
  8001638:	f000 fd58 	bl	80020ec <HAL_GetTick>
  800163c:	4602      	mov	r2, r0
  800163e:	4b35      	ldr	r3, [pc, #212]	; (8001714 <main+0x324>)
  8001640:	681b      	ldr	r3, [r3, #0]
  8001642:	1ad3      	subs	r3, r2, r3
- 8001644:	2b01      	cmp	r3, #1
+ 8001644:	2b09      	cmp	r3, #9
  8001646:	d915      	bls.n	8001674 <main+0x284>
-		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
+		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*100*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
  8001648:	4b31      	ldr	r3, [pc, #196]	; (8001710 <main+0x320>)
  800164a:	689a      	ldr	r2, [r3, #8]
  800164c:	4b30      	ldr	r3, [pc, #192]	; (8001710 <main+0x320>)
  800164e:	68db      	ldr	r3, [r3, #12]
  8001650:	1ad3      	subs	r3, r2, r3
- 8001652:	f247 5230 	movw	r2, #30000	; 0x7530
+ 8001652:	f241 7270 	movw	r2, #6000	; 0x1770
  8001656:	fb02 f303 	mul.w	r3, r2, r3
  800165a:	0b1b      	lsrs	r3, r3, #12
  800165c:	461a      	mov	r2, r3

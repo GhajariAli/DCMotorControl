@@ -128,10 +128,10 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.2;
+  PID.Kp=0.15;
   PID.Ki=0.001;
   PID.Kd=0;
-  PID.dt=0.002;
+  PID.dt=0.01;
   PID.integral=0;
   PID.min_output=0;
   PID.max_output=1000;
@@ -170,8 +170,8 @@ int main(void)
 	  }
 	  GetEncoderValue(&TestEncoder);
 	  //Calculate RPM
-	  if (HAL_GetTick()-SystemTime>=2){
-		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
+	  if (HAL_GetTick()-SystemTime>=10){
+		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*100*60/1024/4;//100 for 10ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
 	  }
