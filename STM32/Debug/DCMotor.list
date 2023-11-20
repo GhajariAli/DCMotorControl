@@ -37,15 +37,15 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   CONTENTS, READONLY, DEBUGGING, OCTETS
  16 .debug_rnglists 00000a51  00000000  00000000  00030c90  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_macro  0001744d  00000000  00000000  000316e1  2**0
+ 17 .debug_macro  000174ac  00000000  00000000  000316e1  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_line   0000f9b7  00000000  00000000  00048b2e  2**0
+ 18 .debug_line   0000f9c1  00000000  00000000  00048b8d  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .debug_str    0008fcbc  00000000  00000000  000584e5  2**0
+ 19 .debug_str    0008fc77  00000000  00000000  0005854e  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00004880  00000000  00000000  000e81a4  2**2
+ 20 .debug_frame  00004880  00000000  00000000  000e81c8  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 0000004a  00000000  00000000  000eca24  2**0
+ 21 .debug_line_str 0000004a  00000000  00000000  000eca48  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1723,6 +1723,7 @@ void ParseSBUS(tsbus* sbus){
 
 080012f8 <GetEncoderValue>:
 #include "encoder.h"
+#include "main.h"
 
 void GetEncoderValue(encoder_data *encoder){
  80012f8:	b590      	push	{r4, r7, lr}
@@ -1738,7 +1739,7 @@ void GetEncoderValue(encoder_data *encoder){
  800130a:	cb0f      	ldmia	r3, {r0, r1, r2, r3}
  800130c:	e884 000f 	stmia.w	r4, {r0, r1, r2, r3}
 	  //reading encoder value as gray code
-	  EncoderGrayCode = GrayCodeConvert[(HAL_GPIO_ReadPin(ENCODER_PORT, ENCODER_PIN_A) <<1 | HAL_GPIO_ReadPin(ENCODER_PORT, ENCODER_PIN_B)) & 0x03];
+	  EncoderGrayCode = GrayCodeConvert[(HAL_GPIO_ReadPin(encoder_A_GPIO_Port, encoder_A_Pin) <<1 | HAL_GPIO_ReadPin(encoder_B_GPIO_Port, encoder_B_Pin)) & 0x03];
  8001310:	2140      	movs	r1, #64	; 0x40
  8001312:	4821      	ldr	r0, [pc, #132]	; (8001398 <GetEncoderValue+0xa0>)
  8001314:	f001 fd20 	bl	8002d58 <HAL_GPIO_ReadPin>
