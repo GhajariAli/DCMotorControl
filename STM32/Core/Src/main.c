@@ -34,6 +34,8 @@ uint32_t SystemTime = 0;
 encoder_data TestEncoder;
 PID_Controller PID;
 int speedChangerPulse=0;
+int messageUpdateTime=0;
+int speedUpdateTime=0;
 int uart2Free=1;
 /* USER CODE END PTD */
 
@@ -125,7 +127,7 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.3;
+  PID.Kp=0.2;
   PID.Ki=0.01;
   PID.Kd=0;
   PID.dt=0.002;
@@ -138,7 +140,6 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int messageIndex = 0;
 
   while (1)
   {
@@ -155,24 +156,22 @@ int main(void)
 		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
-		  messageIndex++;
-		  if(messageIndex>=50){
-			  char message[50];
-			  int messagaLen=0;
-			  messagaLen=sprintf(&message,"G1=%ld ,\n",TestEncoder.SpeedRPM);
-			  if (uart2Free==1){
-				  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
-				  uart2Free=0;
-			  }
-			  messageIndex=0;
-			  speedChangerPulse++;
-		  }
 	  }
-//	  if(speedChangerPulse==50){
-//		  if(PID.target==250) PID.target=700;
-//		  else if (PID.target==700) PID.target=250;
-//		  speedChangerPulse=0;
-//	  }
+	  if (HAL_GetTick()-messageUpdateTime>=100){
+		  char message[50];
+		  int messagaLen=0;
+		  messagaLen=sprintf(&message,"G1=%ld T1=%ld ,\n",TestEncoder.SpeedRPM,messageUpdateTime);
+		  if (uart2Free==1){
+			  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
+			  uart2Free=0;
+		  }
+		  messageUpdateTime=HAL_GetTick();
+	  }
+	  if(HAL_GetTick()-speedUpdateTime>=10000){
+		  if(PID.target==250) PID.target=500;
+		  else if (PID.target==500) PID.target=250;
+		  speedUpdateTime=HAL_GetTick();
+	  }
 	  updatePID(&PID, TestEncoder.SpeedRPM);
 	  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
     /* USER CODE END WHILE */
