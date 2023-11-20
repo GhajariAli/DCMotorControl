@@ -18,7 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "stdint.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
@@ -34,6 +34,7 @@ uint32_t SystemTime = 0;
 encoder_data TestEncoder;
 PID_Controller PID;
 int speedChangerPulse=0;
+int uart2Free=1;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -57,6 +58,11 @@ DMA_HandleTypeDef hdma_usart1_rx;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if (huart == &huart1){
 		ParseSBUS(&receivedSBUS);
+	}
+}
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	if (huart == &huart2){
+		uart2Free=1;
 	}
 }
 /* USER CODE END PV */
@@ -119,9 +125,9 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.4;
-  PID.Ki=0.001;
-  PID.Kd=0.01;
+  PID.Kp=0.3;
+  PID.Ki=0.01;
+  PID.Kd=0;
   PID.dt=0.002;
   PID.integral=0;
   PID.min_output=0;
@@ -137,34 +143,38 @@ int main(void)
   while (1)
   {
 	  //reading SBUS from remote controller and writing PWM output
-	  /*if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
-		  TIM1->CCR1 = ((receivedSBUS.ch[2]-200)/2)*1000/700;
-	  }
-	  else{
-		  TIM1->CCR1=0;
-	  }*/
+//	  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
+//		  TIM1->CCR1 = ((receivedSBUS.ch[2]-200)/2)*1000/700;
+//	  }
+//	  else{
+//		  TIM1->CCR1=0;
+//	  }
 	  GetEncoderValue(&TestEncoder);
 	  //Calculate RPM every 100msec
-	  if (HAL_GetTick()-SystemTime==2){
+	  if (HAL_GetTick()-SystemTime>=2){
 		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
 		  messageIndex++;
-		  if(messageIndex==50){
-			  char message[10];
-			  sprintf(&message,"G1=%d ,\n",TestEncoder.SpeedRPM);
-			  HAL_UART_Transmit(&huart2, message, 9, 80);
+		  if(messageIndex>=50){
+			  char message[50];
+			  int messagaLen=0;
+			  messagaLen=sprintf(&message,"G1=%ld ,\n",TestEncoder.SpeedRPM);
+			  if (uart2Free==1){
+				  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
+				  uart2Free=0;
+			  }
 			  messageIndex=0;
 			  speedChangerPulse++;
 		  }
 	  }
-	  if(speedChangerPulse==50){
-		  if(PID.target==250) PID.target=700;
-		  else if (PID.target==700) PID.target=250;
-		  speedChangerPulse=0;
-	  }
+//	  if(speedChangerPulse==50){
+//		  if(PID.target==250) PID.target=700;
+//		  else if (PID.target==700) PID.target=250;
+//		  speedChangerPulse=0;
+//	  }
 	  updatePID(&PID, TestEncoder.SpeedRPM);
-	  TIM1->CCR1=PID.output;
+	  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

@@ -14,8 +14,8 @@ typedef struct{
 	int EncoderState[4];
 	int EncoderLastState;
 	enum direction direction;
-	int32_t EncoderValue ;
-	int32_t PreviousEncoderValue;
+	uint32_t EncoderValue ;
+	uint32_t PreviousEncoderValue;
 	int32_t SpeedRPM;
 }encoder_data;
 
