@@ -158,9 +158,9 @@ int main(void)
 		  SystemTime=HAL_GetTick();
 	  }
 	  if (HAL_GetTick()-messageUpdateTime>=10){
-		  char message[50];
+		  char message[100];
 		  int messagaLen=0;
-		  messagaLen=sprintf(&message,"G1=%ld T1=%ld ,\n",TestEncoder.SpeedRPM,messageUpdateTime);
+		  messagaLen=sprintf(&message,"G1=%ld, G2=%f, T1=%ld ,\n",TestEncoder.SpeedRPM,PID.target,messageUpdateTime);
 		  if (uart2Free==1){
 			  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
 			  uart2Free=0;
