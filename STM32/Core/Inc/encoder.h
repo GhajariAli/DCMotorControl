@@ -9,8 +9,8 @@ enum direction {
 typedef struct{
 	int PreviusGrayCode;
 	enum direction direction;
-	uint32_t EncoderValue ;
-	uint32_t PreviousEncoderValue;
+	int32_t EncoderValue ;
+	int32_t PreviousEncoderValue;
 	int32_t SpeedRPM;
 }encoder_data;
 

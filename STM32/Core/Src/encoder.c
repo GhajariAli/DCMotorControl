@@ -12,7 +12,7 @@ void GetEncoderValue(encoder_data *encoder){
 		  EncoderDeltaValue = EncoderGrayCode-encoder->PreviusGrayCode;
 		  if (EncoderDeltaValue<0) {EncoderDeltaValue+=4;}
 		  if (EncoderDeltaValue ==1) {
-			  encoder->direction=CCW;
+			  encoder->direction=CW;
 			  encoder->EncoderValue++;
 		  }
 		  else if (EncoderDeltaValue ==3){
