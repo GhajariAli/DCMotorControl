@@ -7,7 +7,7 @@ typedef struct{
     double target;
     double prev_error;
     double integral;
-    double dt;
+    double dt; //sample time in msec
     double output;
 }PID_Controller;
 

@@ -133,10 +133,10 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.1;
-  PID.Ki=0.005;
-  PID.Kd=0;
-  PID.dt=0.002;
+  PID.Kp=0.2;
+  PID.Ki=4;
+  PID.Kd=0.001;
+  PID.dt=1;
   PID.integral=0;
   PID.min_output=0;
   PID.max_output=1000;
@@ -175,10 +175,12 @@ int main(void)
 	  }
 	  GetEncoderValue(&TestEncoder);
 	  //Calculate RPM
-	  if (HAL_GetTick()-SystemTime>=2){
-		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 1ms to 2sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
+	  if (HAL_GetTick()-SystemTime>=(PID.dt)){
+		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*(1000/PID.dt)*60/1024/4;//1000/dt for converting to pulse per second - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
+		  updatePID(&PID, TestEncoder.SpeedRPM);
+		  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
 	  }
 	  if (HAL_GetTick()-messageUpdateTime>=50){
 		  char message[100];
@@ -190,8 +192,7 @@ int main(void)
 		  }
 		  messageUpdateTime=HAL_GetTick();
 	  }
-	  updatePID(&PID, TestEncoder.SpeedRPM);
-	  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
