@@ -68,6 +68,11 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 		uart2Free=1;
 	}
 }
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin==Encoder_A_Pin){TestEncoder.IT_EncoderChA= HAL_GPIO_ReadPin(Encoder_A_GPIO_Port, Encoder_A_Pin);}
+  else if (GPIO_Pin==Encoder_B_Pin){TestEncoder.IT_EncoderChB= HAL_GPIO_ReadPin(Encoder_B_GPIO_Port, Encoder_B_Pin);}
+}
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -129,11 +134,11 @@ int main(void)
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
   PID.Kp=0.1;
-  PID.Ki=0.01;
+  PID.Ki=0.005;
   PID.Kd=0;
-  PID.dt=0.001;
+  PID.dt=0.002;
   PID.integral=0;
-  PID.min_output=100;
+  PID.min_output=0;
   PID.max_output=1000;
   PID.output=0;
   PID.target=0;
@@ -170,12 +175,12 @@ int main(void)
 	  }
 	  GetEncoderValue(&TestEncoder);
 	  //Calculate RPM
-	  if (HAL_GetTick()-SystemTime>=1){
-		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*1000*60/1024/4;//1000 for 1ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
+	  if (HAL_GetTick()-SystemTime>=2){
+		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 1ms to 2sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
 	  }
-	  if (HAL_GetTick()-messageUpdateTime>=10){
+	  if (HAL_GetTick()-messageUpdateTime>=50){
 		  char message[100];
 		  int messagaLen=0;
 		  messagaLen=sprintf(&message,"G1=%ld, G2=%f, T1=%ld ,\n",TestEncoder.SpeedRPM,PID.target,messageUpdateTime);
@@ -420,7 +425,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : LD2_Pin */
@@ -430,11 +435,15 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : encoder_A_Pin encoder_B_Pin */
-  GPIO_InitStruct.Pin = encoder_A_Pin|encoder_B_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pins : Encoder_A_Pin Encoder_B_Pin */
+  GPIO_InitStruct.Pin = Encoder_A_Pin|Encoder_B_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
