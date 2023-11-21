@@ -1762,7 +1762,7 @@ void GetEncoderValue(encoder_data *encoder){
  800133a:	681b      	ldr	r3, [r3, #0]
  800133c:	69ba      	ldr	r2, [r7, #24]
  800133e:	429a      	cmp	r2, r3
- 8001340:	d023      	beq.n	800138a <GetEncoderValue+0x92>
+ 8001340:	d024      	beq.n	800138c <GetEncoderValue+0x94>
 		  int EncoderDeltaValue;
 		  EncoderDeltaValue = EncoderGrayCode-encoder->PreviusGrayCode;
  8001342:	687b      	ldr	r3, [r7, #4]
@@ -1770,54 +1770,54 @@ void GetEncoderValue(encoder_data *encoder){
  8001346:	69ba      	ldr	r2, [r7, #24]
  8001348:	1ad3      	subs	r3, r2, r3
  800134a:	61fb      	str	r3, [r7, #28]
-		  if (EncoderDeltaValue<0) {EncoderDeltaValue=4;}
+		  if (EncoderDeltaValue<0) {EncoderDeltaValue+=4;}
  800134c:	69fb      	ldr	r3, [r7, #28]
  800134e:	2b00      	cmp	r3, #0
- 8001350:	da01      	bge.n	8001356 <GetEncoderValue+0x5e>
- 8001352:	2304      	movs	r3, #4
- 8001354:	61fb      	str	r3, [r7, #28]
+ 8001350:	da02      	bge.n	8001358 <GetEncoderValue+0x60>
+ 8001352:	69fb      	ldr	r3, [r7, #28]
+ 8001354:	3304      	adds	r3, #4
+ 8001356:	61fb      	str	r3, [r7, #28]
 		  if (EncoderDeltaValue ==1) {
- 8001356:	69fb      	ldr	r3, [r7, #28]
- 8001358:	2b01      	cmp	r3, #1
- 800135a:	d108      	bne.n	800136e <GetEncoderValue+0x76>
+ 8001358:	69fb      	ldr	r3, [r7, #28]
+ 800135a:	2b01      	cmp	r3, #1
+ 800135c:	d108      	bne.n	8001370 <GetEncoderValue+0x78>
 			  encoder->direction=CCW;
- 800135c:	687b      	ldr	r3, [r7, #4]
- 800135e:	2202      	movs	r2, #2
- 8001360:	711a      	strb	r2, [r3, #4]
+ 800135e:	687b      	ldr	r3, [r7, #4]
+ 8001360:	2202      	movs	r2, #2
+ 8001362:	711a      	strb	r2, [r3, #4]
 			  encoder->EncoderValue++;
- 8001362:	687b      	ldr	r3, [r7, #4]
- 8001364:	689b      	ldr	r3, [r3, #8]
- 8001366:	1c5a      	adds	r2, r3, #1
- 8001368:	687b      	ldr	r3, [r7, #4]
- 800136a:	609a      	str	r2, [r3, #8]
- 800136c:	e00a      	b.n	8001384 <GetEncoderValue+0x8c>
+ 8001364:	687b      	ldr	r3, [r7, #4]
+ 8001366:	689b      	ldr	r3, [r3, #8]
+ 8001368:	1c5a      	adds	r2, r3, #1
+ 800136a:	687b      	ldr	r3, [r7, #4]
+ 800136c:	609a      	str	r2, [r3, #8]
+ 800136e:	e00a      	b.n	8001386 <GetEncoderValue+0x8e>
 		  }
 		  else if (EncoderDeltaValue ==3){
- 800136e:	69fb      	ldr	r3, [r7, #28]
- 8001370:	2b03      	cmp	r3, #3
- 8001372:	d107      	bne.n	8001384 <GetEncoderValue+0x8c>
+ 8001370:	69fb      	ldr	r3, [r7, #28]
+ 8001372:	2b03      	cmp	r3, #3
+ 8001374:	d107      	bne.n	8001386 <GetEncoderValue+0x8e>
 			  encoder->direction=CCW;
- 8001374:	687b      	ldr	r3, [r7, #4]
- 8001376:	2202      	movs	r2, #2
- 8001378:	711a      	strb	r2, [r3, #4]
+ 8001376:	687b      	ldr	r3, [r7, #4]
+ 8001378:	2202      	movs	r2, #2
+ 800137a:	711a      	strb	r2, [r3, #4]
 			  encoder->EncoderValue--;
- 800137a:	687b      	ldr	r3, [r7, #4]
- 800137c:	689b      	ldr	r3, [r3, #8]
- 800137e:	1e5a      	subs	r2, r3, #1
- 8001380:	687b      	ldr	r3, [r7, #4]
- 8001382:	609a      	str	r2, [r3, #8]
+ 800137c:	687b      	ldr	r3, [r7, #4]
+ 800137e:	689b      	ldr	r3, [r3, #8]
+ 8001380:	1e5a      	subs	r2, r3, #1
+ 8001382:	687b      	ldr	r3, [r7, #4]
+ 8001384:	609a      	str	r2, [r3, #8]
 		  }
 		  encoder->PreviusGrayCode=EncoderGrayCode;
- 8001384:	687b      	ldr	r3, [r7, #4]
- 8001386:	69ba      	ldr	r2, [r7, #24]
- 8001388:	601a      	str	r2, [r3, #0]
+ 8001386:	687b      	ldr	r3, [r7, #4]
+ 8001388:	69ba      	ldr	r2, [r7, #24]
+ 800138a:	601a      	str	r2, [r3, #0]
 	  }
 }
- 800138a:	bf00      	nop
- 800138c:	3724      	adds	r7, #36	; 0x24
- 800138e:	46bd      	mov	sp, r7
- 8001390:	bd90      	pop	{r4, r7, pc}
- 8001392:	bf00      	nop
+ 800138c:	bf00      	nop
+ 800138e:	3724      	adds	r7, #36	; 0x24
+ 8001390:	46bd      	mov	sp, r7
+ 8001392:	bd90      	pop	{r4, r7, pc}
  8001394:	08008508 	.word	0x08008508
  8001398:	40020000 	.word	0x40020000
 
@@ -2171,7 +2171,7 @@ int main(void)
  8001642:	1ad3      	subs	r3, r2, r3
  8001644:	2b09      	cmp	r3, #9
  8001646:	d915      	bls.n	8001674 <main+0x284>
-		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*100*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
+		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*100*60/1024/4;//100 for 10ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
  8001648:	4b31      	ldr	r3, [pc, #196]	; (8001710 <main+0x320>)
  800164a:	689a      	ldr	r2, [r3, #8]
  800164c:	4b30      	ldr	r3, [pc, #192]	; (8001710 <main+0x320>)
