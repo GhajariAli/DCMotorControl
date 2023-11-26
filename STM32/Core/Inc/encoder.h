@@ -2,7 +2,8 @@
 #include <stm32f4xx.h>
 //select only one of the following modes:
 //#define ENCODER_GPIO_MODE
-#define ENCODER_INTERRUPT_MODE
+//#define ENCODER_INTERRUPT_MODE
+#define ENCODER_TIMER_MODE
 
 enum direction {
   CW=1,
