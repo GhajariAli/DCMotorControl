@@ -147,8 +147,8 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.2;
-  PID.Ki=4;
+  PID.Kp=0.05;
+  PID.Ki=0.1;
   PID.Kd=0.001;
   PID.dt=1;
   PID.integral=0;
@@ -169,7 +169,7 @@ int main(void)
 		  if (ToggleSetpointInput==0){ToggleSetpointInput=1;}
 		  else if (ToggleSetpointInput==1){
 			  ToggleSetpointInput=0;
-			  PID.target=250;
+			  PID.target=500;
 		  }
 	  }
 	  if (ToggleSetpointInput){
@@ -182,8 +182,8 @@ int main(void)
 	  }
 	  else if(!ToggleSetpointInput){
 		  if(HAL_GetTick()-speedUpdateTime>=10000){
-	 		  if(PID.target==250) PID.target=600;
-	 		  else if (PID.target==600) PID.target=250;
+	 		  if(PID.target==500) PID.target=1000;
+	 		  else if (PID.target==1000) PID.target=500;
 	 		  speedUpdateTime=HAL_GetTick();
 		  }
 	  }
