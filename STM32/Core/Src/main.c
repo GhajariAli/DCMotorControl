@@ -39,6 +39,8 @@ int speedUpdateTime=0;
 int uart2Free=1;
 int ToggleSetpointInput=0;
 int32_t TimerModeEncoderValue=0;
+uint32_t Timer2Counter=0;
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -52,13 +54,27 @@ int32_t TimerModeEncoderValue=0;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if (GPIO_Pin == Encoder_0_Pin){
+		uint32_t CounterTemp;
+		CounterTemp=  __HAL_TIM_GET_COUNTER(&htim2);
+		if (CounterTemp>20000){
+			Timer2Counter =CounterTemp;
+			__HAL_TIM_SET_COUNTER(&htim2,0);
+		}
+
+	}
+}
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if (huart == &huart1){
 		ParseSBUS(&receivedSBUS);
@@ -92,6 +108,8 @@ static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -133,9 +151,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   MX_USART1_UART_Init();
+  MX_ADC1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_DMA(&huart1, &receivedSBUS.ReceivedData[0], SBUS_LEN);
   HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start(&htim2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   SystemTime=HAL_GetTick();
   TestEncoder.PreviusGrayCode=0;
@@ -144,13 +165,13 @@ int main(void)
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
   PID.Kp=1.2;
-  PID.Ki=0.8;
-  PID.Kd=0;
+  PID.Ki=0.6;
+  PID.Kd=0.2;
   PID.dt=25;
   PID.integral=0;
   PID.min_output=0;
   PID.max_output=1000;
-  PID.output=0;
+  PID.output=5000;
   PID.target=0;
   /* USER CODE END 2 */
 
@@ -165,12 +186,15 @@ int main(void)
 		  if (ToggleSetpointInput==0){ToggleSetpointInput=1;}
 		  else if (ToggleSetpointInput==1){
 			  ToggleSetpointInput=0;
-			  PID.target=800;
+			  PID.target=-250;
 		  }
 	  }
 	  if (ToggleSetpointInput){
-		  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
-			  PID.target = ((receivedSBUS.ch[2]-200)/2)*1000/700;
+		  if (receivedSBUS.ch[1]>1000 && receivedSBUS.ch[1]<2000){
+			  PID.target = 2* ( receivedSBUS.ch[1]-1000);
+		  }
+		  else if (receivedSBUS.ch[1]>0 && receivedSBUS.ch[1]<990){
+			  PID.target = -2* (990- receivedSBUS.ch[1]);
 		  }
 		  else{
 			  PID.target=0;
@@ -178,8 +202,8 @@ int main(void)
 	  }
 	  else if(!ToggleSetpointInput){
 		  if(HAL_GetTick()-speedUpdateTime>=10000){
-	 		  if(PID.target==800) PID.target=1000;
-	 		  else if (PID.target==1000) PID.target=800;
+	 		  if(PID.target==-250) PID.target=250;
+	 		  else if (PID.target==250) PID.target=-250;
 	 		  speedUpdateTime=HAL_GetTick();
 		  }
 	  }
@@ -195,7 +219,7 @@ int main(void)
 	  if (HAL_GetTick()-messageUpdateTime>=50){
 		  char message[100];
 		  int messagaLen=0;
-		  messagaLen=sprintf(&message,"G1=%ld, G2=%f, T1=%ld ,\n",TestEncoder.SpeedRPM,PID.target,messageUpdateTime);
+		  messagaLen=sprintf(&message,"G1=%ld, G2=%f,G3=%ld T1=%ld ,\n",TestEncoder.SpeedRPM,PID.target,93750000/Timer2Counter,messageUpdateTime);
 		  if (uart2Free==1){
 			  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
 			  uart2Free=0;
@@ -254,6 +278,58 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -328,6 +404,51 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -430,11 +551,21 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_RESET);
+
   /*Configure GPIO pins : B1_Pin Encoder_6_Pin */
   GPIO_InitStruct.Pin = B1_Pin|Encoder_6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Motor_Enable_Pin */
+  GPIO_InitStruct.Pin = Motor_Enable_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(Motor_Enable_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : Encoder_2_Pin Encoder_3_Pin Encoder_4_Pin */
   GPIO_InitStruct.Pin = Encoder_2_Pin|Encoder_3_Pin|Encoder_4_Pin;
@@ -442,11 +573,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : Encoder_7_Pin Encoder_5_Pin Encoder_0_Pin Encoder_1_Pin */
-  GPIO_InitStruct.Pin = Encoder_7_Pin|Encoder_5_Pin|Encoder_0_Pin|Encoder_1_Pin;
+  /*Configure GPIO pins : Encoder_7_Pin Encoder_5_Pin Encoder_1_Pin */
+  GPIO_InitStruct.Pin = Encoder_7_Pin|Encoder_5_Pin|Encoder_1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Encoder_0_Pin */
+  GPIO_InitStruct.Pin = Encoder_0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Encoder_0_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
