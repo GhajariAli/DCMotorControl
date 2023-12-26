@@ -82,20 +82,3 @@ and of course you'll find all my 3d designs in the 3d model folder
 
 
 </details>
-
-
-<details>
-
-<summary>Tools I've used</summary>
-
-### You can add a header
-
-You can add text within a collapsed section. 
-
-You can add an image or a code block, too.
-
-```ruby
-   puts "Hello World"
-```
-
-</details>
