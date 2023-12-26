@@ -7,14 +7,7 @@ void updatePID(PID_Controller* pid, double current) {
 		error = pid->target - current;
 		break;
 	case Position:
-		int ModifiedTarget;
-		if (pid->target<(ENCODER_RESOLUTION/2)){
-			ModifiedTarget= ENCODER_RESOLUTION/2 + pid->target ;
-		}
-		else{
-			ModifiedTarget= - ( ENCODER_RESOLUTION/2 ) + pid->target ;
-		}
-		error = ModifiedTarget - current;
+		error = pid->target - current;
 		if (error >0){
 			error=(ENCODER_RESOLUTION/2)-error;
 		}

@@ -41,6 +41,8 @@ int ToggleSetpointInput=0;
 int32_t TimerModeEncoderValue=0;//used for second method of speed calc - not used anymore
 uint32_t Timer2Counter=0;//used for second method of speed calc - not used anymore
 int32_t ProcessValue=0;
+int ModuloSetpoint;
+int ModuloFeedback;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -165,8 +167,8 @@ int main(void)
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
   PID.Kp=5;
-  PID.Ki=1;
-  PID.Kd=0;
+  PID.Ki=0.6;
+  PID.Kd=0.1;
   PID.dt=10;
   PID.integral=0;
   PID.min_output=400;
@@ -179,10 +181,10 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-
+  ToggleSetpointInput=3;
   while (1)
   {
-	  ToggleSetpointInput=3;
+
 	  //read Encoder
 	  GetEncoderValue(&TestEncoder);
 	  //reading SBUS from remote controller and writing PWM output
@@ -198,11 +200,25 @@ int main(void)
 	  }
 	  switch (ToggleSetpointInput) {
 	  case 0://get speed command from remote controller
+		  PID.Kp=1.2;
+		  PID.Ki=0.8;
+		  PID.Kd=0;
+		  PID.min_output=0;
+		  PID.max_output=1000;
+		  PID.min_Integral=0;
+		  PID.max_Integral=1000;
 		  PID.target = 0 ;
 		  ProcessValue= TestEncoder.SpeedRPM;
 		  PID.ControlMode=Velocity;
 		  break;
 	  case 1:
+		  PID.Kp=1.2;
+		  PID.Ki=0.8;
+		  PID.Kd=0;
+		  PID.min_output=0;
+		  PID.max_output=1000;
+		  PID.min_Integral=0;
+		  PID.max_Integral=1000;
 		  PID.ControlMode=Velocity;
 		  if (receivedSBUS.ch[1]>1000 && receivedSBUS.ch[1]<2000){
 			  PID.target = 2* ( receivedSBUS.ch[1]-1000);
@@ -216,6 +232,13 @@ int main(void)
 		  ProcessValue= TestEncoder.SpeedRPM;
 		  break;
 	  case 2: // toggle speed automatically
+		  PID.Kp=1.2;
+		  PID.Ki=0.8;
+		  PID.Kd=0;
+		  PID.min_output=0;
+		  PID.max_output=1000;
+		  PID.min_Integral=0;
+		  PID.max_Integral=1000;
 		  PID.ControlMode=Velocity;
 		  if(HAL_GetTick()-speedUpdateTime>=10000){
 	 		  if(PID.target==-250) PID.target=250;
@@ -225,16 +248,26 @@ int main(void)
 		  ProcessValue= TestEncoder.SpeedRPM;
 		  break;
 	  case 3: //Position control
-
-		  if (receivedSBUS.ch[2]>180 && receivedSBUS.ch[2]<2000){
-		  		PID.target = receivedSBUS.ch[2]/10;
+		  PID.Kp=5;
+		  PID.Ki=0.6;
+		  PID.Kd=0.1;
+		  PID.min_output=400;
+		  PID.max_output=600;
+		  PID.min_Integral=-100;
+		  PID.max_Integral= 100;
+		  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<1800){
+			  ModuloSetpoint = (receivedSBUS.ch[2]-200)*360/1600;
 		  }
-		  else{
-			  PID.target=0;
+		  else if(receivedSBUS.ch[2]<200){
+			  ModuloSetpoint=0;
 		  }
-
+		  else if(receivedSBUS.ch[2]>1800){
+			  ModuloSetpoint=360;
+		  }
+		  PID.target = ModuloSetpoint *256/360;
 		  PID.ControlMode=Position;
 		  ProcessValue= TestEncoder.GrayCode;
+		  ModuloFeedback= ProcessValue*360/256;
 		  break;
 	  }
 
@@ -249,7 +282,7 @@ int main(void)
 	  if (HAL_GetTick()-messageUpdateTime>=50){
 		  char message[100];
 		  int messagaLen=0;
-		  messagaLen=sprintf(&message,"G1=%ld, G2=%f,G3=%ld T1=%ld ,\n",ProcessValue,PID.target,93750000/Timer2Counter,messageUpdateTime);
+		  messagaLen=sprintf(&message,"G1=%ld, G2=%f,G3=%d, G4=%d T1=%d ,\n",ProcessValue,PID.target,ModuloSetpoint,ModuloFeedback,messageUpdateTime);
 		  if (uart2Free==1){
 			  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
 			  uart2Free=0;
