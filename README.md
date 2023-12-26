@@ -3,7 +3,7 @@ I'll try to capture my Journey in getting a better understanding of a Motor Cont
 
 <details>
   
-<summary>Here are the parts I've used</summary>
+<summary>Parts I've used</summary>
 
 - Swiss Maxon A-max 391116 Mini 22mm Coreless Motor DC 12V 24V 11000RPM High Speed (spoiler alert: it's max 2250rpm) [buy here](https://www.ebay.com/itm/263685368624)
   
@@ -31,6 +31,10 @@ I'll try to capture my Journey in getting a better understanding of a Motor Cont
 
 </details>
 
+<details>
+
+<summary>First Setup</summary>
+
 Just to make things more fun I've started with the encoder mentioned above and made this setup: 
 
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/012bbd8a-51e8-4239-bd87-f05b80f4a1af)
@@ -41,12 +45,20 @@ later on moved to this to have it more stable:
 
 All models can be find in the 3D model folder
 
+Basic circuit for this setup (you can find it in the KiCAD folder):
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/33acaf40-8d13-43b6-b633-c8054bc4c1a9)
+
+This can do forward direction only for speed control with relative encodr
+
+</details>
+
+<details>
+
+<summary>Second Setup</summary>
+
 All branches before this ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/a504411a-46da-4903-9714-701d4b92ca65) is more of a MCU feature 
 
-let's talk about the circuit for this setup (you can find it in the KiCAD folder):
-to drive a DC motor the easy and be able to position and velocity control in both directions.
-
-
+</details>
 <details>
 
 <summary>Tools I've used</summary>
