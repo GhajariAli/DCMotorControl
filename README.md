@@ -10,16 +10,20 @@ Here are the parts I've used:
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/febe3d8e-4f5e-4a88-bf8a-49c4e9f33ff9)
 - Power Op-Amp [OPA548T](https://www.digikey.ca/en/products/detail/texas-instruments/OPA548T/266166)
 - logic level Op-Amp for level shifting, Sallen-Key Filter, ... [LM324](https://www.digikey.ca/en/products/detail/texas-instruments/LM324N/277627)
-- Nucleo STM32-F411RE dev board
+- Nucleo STM32-F411RE dev board [buy here](https://www.digikey.ca/en/products/detail/stmicroelectronics/NUCLEO-F411RE/4866485)
 - Resistors, Diodes, capacitors...
 
 Here is the list of tools I had to use:
 - RIGOL DHO804 oscilloscope
-- Two 30V10A DC power Supply ( you need two to get + and - voltage since we don't use bridge setup)
+- Two 30V-10A DC power Supply ( you need two to get + and - voltage since I don't use bridge setup at first)
 - Bambu Lab P1S 3D printer
 - of course a computer to program (Duh!)
 - A Taranis X7 Controller and its receiver to send commands ( you don't need this necessarily but it's fun!)
-  
+- Also I used this Awsome plotter software [get it here](https://github.com/mich-w/QtSerialMonitor)
 
-use this plotter
-https://github.com/mich-w/QtSerialMonitor
+Just to make things more fun I've started with the encoder mentioned above and made this setup: 
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/012bbd8a-51e8-4239-bd87-f05b80f4a1af)
+
+
+؛خع
