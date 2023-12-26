@@ -37,6 +37,13 @@ int speedChangerPulse=0;
 int messageUpdateTime=0;
 int speedUpdateTime=0;
 int uart2Free=1;
+int OperationMode=0;
+int PreviousOperationMode=0;
+int32_t TimerModeEncoderValue=0;//used for second method of speed calc - not used anymore
+uint32_t Timer2Counter=0;//used for second method of speed calc - not used anymore
+int32_t ProcessValue=0;
+int ModuloSetpoint;
+int ModuloFeedback;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -50,13 +57,27 @@ int uart2Free=1;
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 TIM_HandleTypeDef htim1;
+TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
+	if (GPIO_Pin == Encoder_0_Pin){
+		uint32_t CounterTemp;
+		CounterTemp=  __HAL_TIM_GET_COUNTER(&htim2);
+		if (CounterTemp>20000){
+			Timer2Counter =CounterTemp;
+			__HAL_TIM_SET_COUNTER(&htim2,0);
+		}
+
+	}
+}
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if (huart == &huart1){
 		ParseSBUS(&receivedSBUS);
@@ -67,6 +88,20 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
 		uart2Free=1;
 	}
 }
+#ifdef ENCODER_INTERRUPT_MODE
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+  if(GPIO_Pin==Encoder_A_Pin){TestEncoder.IT_EncoderChA= HAL_GPIO_ReadPin(Encoder_A_GPIO_Port, Encoder_A_Pin);}
+  else if (GPIO_Pin==Encoder_B_Pin){TestEncoder.IT_EncoderChB= HAL_GPIO_ReadPin(Encoder_B_GPIO_Port, Encoder_B_Pin);}
+}
+#endif
+#ifdef ENCODER_TIMER_MODE
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
+	if (htim == &htim2){
+		TestEncoder.EncoderValue = __HAL_TIM_GET_COUNTER(htim);
+	}
+}
+#endif
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -76,6 +111,8 @@ static void MX_DMA_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_TIM2_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -117,9 +154,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   MX_USART1_UART_Init();
+  MX_ADC1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_DMA(&huart1, &receivedSBUS.ReceivedData[0], SBUS_LEN);
   HAL_TIM_Base_Start_IT(&htim1);
+  HAL_TIM_Base_Start(&htim2);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   SystemTime=HAL_GetTick();
   TestEncoder.PreviusGrayCode=0;
@@ -127,15 +167,17 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=0.2;
-  PID.Ki=0.01;
-  PID.Kd=0;
-  PID.dt=0.002;
+  PID.Kp=5;
+  PID.Ki=0.6;
+  PID.Kd=0.1;
+  PID.dt=10;
   PID.integral=0;
-  PID.min_output=0;
-  PID.max_output=1000;
-  PID.output=0;
-  PID.target=250;
+  PID.min_output= 0;
+  PID.max_output= 1000;
+  PID.min_Integral= -500;
+  PID.max_Integral= 500;
+  PID.output=5000;
+  PID.target=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -143,37 +185,109 @@ int main(void)
 
   while (1)
   {
-	  //reading SBUS from remote controller and writing PWM output
-//	  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<2000){
-//		  TIM1->CCR1 = ((receivedSBUS.ch[2]-200)/2)*1000/700;
-//	  }
-//	  else{
-//		  TIM1->CCR1=0;
-//	  }
+
+	  //read Encoder
 	  GetEncoderValue(&TestEncoder);
+	  //reading SBUS from remote controller and writing PWM output
+	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){
+		  while(!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){}
+		  if (OperationMode==3){
+			  OperationMode=0;
+		  }
+		  else OperationMode++;
+	  }
+	  switch (OperationMode) {
+	  case 0://get speed command from remote controller
+		  PID.Kp=1.2;
+		  PID.Ki=0.8;
+		  PID.Kd=0;
+		  PID.target = 0 ;
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  PID.ControlMode=Velocity;
+		  PreviousOperationMode=OperationMode;
+		  break;
+	  case 1: //Position control
+		  if (PreviousOperationMode!=OperationMode){
+			  PID.Kp=0.75;
+			  PID.Ki=0.08;
+			  PID.Kd=0.16;
+			  PID.output=0;
+			  PID.target=0;
+			  PID.integral=0;
+		  }
+
+		  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<1800){
+			  ModuloSetpoint = (receivedSBUS.ch[2]-200)*360/1600;
+		  }
+		  else if(receivedSBUS.ch[2]<200){
+			  ModuloSetpoint=0;
+		  }
+		  else if(receivedSBUS.ch[2]>1800){
+			  ModuloSetpoint=360;
+		  }
+		  PID.target = ModuloSetpoint *256/360;
+		  PID.ControlMode=Position;
+		  ProcessValue= TestEncoder.GrayCode;
+		  ModuloFeedback= ProcessValue*360/256;
+		  PreviousOperationMode=OperationMode;
+		  break;
+	  case 2:
+		  PID.Kp=1.2;
+		  PID.Ki=0.8;
+		  PID.Kd=0;
+		  PID.ControlMode=Velocity;
+		  if (receivedSBUS.ch[1]>1000 && receivedSBUS.ch[1]<2000){
+			  PID.target = 2* ( receivedSBUS.ch[1]-1000);
+		  }
+		  else if (receivedSBUS.ch[1]>0 && receivedSBUS.ch[1]<990){
+			  PID.target = -2* (990- receivedSBUS.ch[1]);
+		  }
+		  else{
+			  PID.target=0;
+		  }
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  PreviousOperationMode=OperationMode;
+		  break;
+	  case 3: // toggle speed automatically
+		  if (PreviousOperationMode!=OperationMode){
+			  PID.Kp=1.2;
+			  PID.Ki=0.8;
+			  PID.Kd=0;
+			  PID.target=250;
+		  }
+		  PID.ControlMode=Velocity;
+		  if(HAL_GetTick()-speedUpdateTime>=10000){
+	 		  if(PID.target==-250) PID.target=250;
+	 		  else if (PID.target==250) PID.target=-250;
+	 		  speedUpdateTime=HAL_GetTick();
+		  }
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  PreviousOperationMode=OperationMode;
+		  break;
+
+	  }
+
 	  //Calculate RPM
-	  if (HAL_GetTick()-SystemTime>=2){
-		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*500*60/1024/4;//500 for 2ms to 1sec - 60 for 1sec to 1min - 1024 for pules/rev - 4 for gray code to pulse
+	  if (HAL_GetTick()-SystemTime>=(PID.dt)){
+		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*(1000/PID.dt)*60/256;//1000/dt for converting to pulse per second - 60 for 1sec to 1min - 256 for pules/rev - for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
+		  updatePID(&PID, ProcessValue);
+		  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
+		  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_RESET);
+		  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_SET);
 	  }
-	  if (HAL_GetTick()-messageUpdateTime>=10){
+	  if (HAL_GetTick()-messageUpdateTime>=50){
 		  char message[100];
 		  int messagaLen=0;
-		  messagaLen=sprintf(&message,"G1=%ld, G2=%f, T1=%ld ,\n",TestEncoder.SpeedRPM,PID.target,messageUpdateTime);
+		  messagaLen=sprintf(&message,"G1=%ld, G2=%f,G3=%d, G4=%d T1=%d ,\n",ProcessValue,PID.target,ModuloSetpoint,ModuloFeedback,messageUpdateTime);
 		  if (uart2Free==1){
 			  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
 			  uart2Free=0;
 		  }
 		  messageUpdateTime=HAL_GetTick();
 	  }
-	  if(HAL_GetTick()-speedUpdateTime>=10000){
-		  if(PID.target==250) PID.target=500;
-		  else if (PID.target==500) PID.target=250;
-		  speedUpdateTime=HAL_GetTick();
-	  }
-	  updatePID(&PID, TestEncoder.SpeedRPM);
-	  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -225,6 +339,58 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -299,6 +465,51 @@ static void MX_TIM1_Init(void)
 
   /* USER CODE END TIM1_Init 2 */
   HAL_TIM_MspPostInit(&htim1);
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
 
 }
 
@@ -402,26 +613,42 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : B1_Pin */
-  GPIO_InitStruct.Pin = B1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  /*Configure GPIO pins : B1_Pin Encoder_6_Pin */
+  GPIO_InitStruct.Pin = B1_Pin|Encoder_6_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : LD2_Pin */
-  GPIO_InitStruct.Pin = LD2_Pin;
+  /*Configure GPIO pin : Motor_Enable_Pin */
+  GPIO_InitStruct.Pin = Motor_Enable_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(Motor_Enable_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : encoder_A_Pin encoder_B_Pin */
-  GPIO_InitStruct.Pin = encoder_A_Pin|encoder_B_Pin;
+  /*Configure GPIO pins : Encoder_2_Pin Encoder_3_Pin Encoder_4_Pin */
+  GPIO_InitStruct.Pin = Encoder_2_Pin|Encoder_3_Pin|Encoder_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : Encoder_7_Pin Encoder_5_Pin Encoder_1_Pin */
+  GPIO_InitStruct.Pin = Encoder_7_Pin|Encoder_5_Pin|Encoder_1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : Encoder_0_Pin */
+  GPIO_InitStruct.Pin = Encoder_0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(Encoder_0_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

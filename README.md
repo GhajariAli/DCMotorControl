@@ -26,4 +26,3 @@ Just to make things more fun I've started with the encoder mentioned above and m
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/012bbd8a-51e8-4239-bd87-f05b80f4a1af)
 
 
-؛خع
