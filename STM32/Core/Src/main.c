@@ -37,7 +37,8 @@ int speedChangerPulse=0;
 int messageUpdateTime=0;
 int speedUpdateTime=0;
 int uart2Free=1;
-int ToggleSetpointInput=0;
+int OperationMode=0;
+int PreviousOperationMode=0;
 int32_t TimerModeEncoderValue=0;//used for second method of speed calc - not used anymore
 uint32_t Timer2Counter=0;//used for second method of speed calc - not used anymore
 int32_t ProcessValue=0;
@@ -171,17 +172,17 @@ int main(void)
   PID.Kd=0.1;
   PID.dt=10;
   PID.integral=0;
-  PID.min_output=400;
-  PID.max_output=600;
-  PID.min_Integral=-100;
-  PID.max_Integral= 100;
+  PID.min_output= 0;
+  PID.max_output= 1000;
+  PID.min_Integral= -500;
+  PID.max_Integral= 500;
   PID.output=5000;
   PID.target=0;
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  ToggleSetpointInput=3;
+
   while (1)
   {
 
@@ -190,71 +191,31 @@ int main(void)
 	  //reading SBUS from remote controller and writing PWM output
 	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){
 		  while(!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){}
-		  if (ToggleSetpointInput==3){
-			  ToggleSetpointInput=0;
+		  if (OperationMode==3){
+			  OperationMode=0;
 		  }
-		  else ToggleSetpointInput++;
-		  if (ToggleSetpointInput==2){
-			  PID.target=250;
-		  }
+		  else OperationMode++;
 	  }
-	  switch (ToggleSetpointInput) {
+	  switch (OperationMode) {
 	  case 0://get speed command from remote controller
 		  PID.Kp=1.2;
 		  PID.Ki=0.8;
 		  PID.Kd=0;
-		  PID.min_output=0;
-		  PID.max_output=1000;
-		  PID.min_Integral=0;
-		  PID.max_Integral=1000;
 		  PID.target = 0 ;
 		  ProcessValue= TestEncoder.SpeedRPM;
 		  PID.ControlMode=Velocity;
+		  PreviousOperationMode=OperationMode;
 		  break;
-	  case 1:
-		  PID.Kp=1.2;
-		  PID.Ki=0.8;
-		  PID.Kd=0;
-		  PID.min_output=0;
-		  PID.max_output=1000;
-		  PID.min_Integral=0;
-		  PID.max_Integral=1000;
-		  PID.ControlMode=Velocity;
-		  if (receivedSBUS.ch[1]>1000 && receivedSBUS.ch[1]<2000){
-			  PID.target = 2* ( receivedSBUS.ch[1]-1000);
-		  }
-		  else if (receivedSBUS.ch[1]>0 && receivedSBUS.ch[1]<990){
-			  PID.target = -2* (990- receivedSBUS.ch[1]);
-		  }
-		  else{
+	  case 1: //Position control
+		  if (PreviousOperationMode!=OperationMode){
+			  PID.Kp=0.75;
+			  PID.Ki=0.08;
+			  PID.Kd=0.16;
+			  PID.output=0;
 			  PID.target=0;
+			  PID.integral=0;
 		  }
-		  ProcessValue= TestEncoder.SpeedRPM;
-		  break;
-	  case 2: // toggle speed automatically
-		  PID.Kp=1.2;
-		  PID.Ki=0.8;
-		  PID.Kd=0;
-		  PID.min_output=0;
-		  PID.max_output=1000;
-		  PID.min_Integral=0;
-		  PID.max_Integral=1000;
-		  PID.ControlMode=Velocity;
-		  if(HAL_GetTick()-speedUpdateTime>=10000){
-	 		  if(PID.target==-250) PID.target=250;
-	 		  else if (PID.target==250) PID.target=-250;
-	 		  speedUpdateTime=HAL_GetTick();
-		  }
-		  ProcessValue= TestEncoder.SpeedRPM;
-		  break;
-	  case 3: //Position control
-		  PID.Kp=5;
-		  PID.Ki=0.6;
-		  PID.Kd=0.1;
-		  PID.min_output=400;
-		  PID.max_output=600;
-		  PID.min_Integral=-100;
-		  PID.max_Integral= 100;
+
 		  if (receivedSBUS.ch[2]>200 && receivedSBUS.ch[2]<1800){
 			  ModuloSetpoint = (receivedSBUS.ch[2]-200)*360/1600;
 		  }
@@ -268,7 +229,42 @@ int main(void)
 		  PID.ControlMode=Position;
 		  ProcessValue= TestEncoder.GrayCode;
 		  ModuloFeedback= ProcessValue*360/256;
+		  PreviousOperationMode=OperationMode;
 		  break;
+	  case 2:
+		  PID.Kp=1.2;
+		  PID.Ki=0.8;
+		  PID.Kd=0;
+		  PID.ControlMode=Velocity;
+		  if (receivedSBUS.ch[1]>1000 && receivedSBUS.ch[1]<2000){
+			  PID.target = 2* ( receivedSBUS.ch[1]-1000);
+		  }
+		  else if (receivedSBUS.ch[1]>0 && receivedSBUS.ch[1]<990){
+			  PID.target = -2* (990- receivedSBUS.ch[1]);
+		  }
+		  else{
+			  PID.target=0;
+		  }
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  PreviousOperationMode=OperationMode;
+		  break;
+	  case 3: // toggle speed automatically
+		  if (PreviousOperationMode!=OperationMode){
+			  PID.Kp=1.2;
+			  PID.Ki=0.8;
+			  PID.Kd=0;
+			  PID.target=250;
+		  }
+		  PID.ControlMode=Velocity;
+		  if(HAL_GetTick()-speedUpdateTime>=10000){
+	 		  if(PID.target==-250) PID.target=250;
+	 		  else if (PID.target==250) PID.target=-250;
+	 		  speedUpdateTime=HAL_GetTick();
+		  }
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  PreviousOperationMode=OperationMode;
+		  break;
+
 	  }
 
 	  //Calculate RPM
