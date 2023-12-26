@@ -60,9 +60,30 @@ List of Branches:
 
 <summary>Second Setup</summary>
 
-All branches before this ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/a504411a-46da-4903-9714-701d4b92ca65) is more of a MCU feature 
+in order to have both position and velocity control I moved to an absolute encodr and I made it myself!
+[This branch](https://github.com/GhajariAli/DCMotorControl/tree/BidirectionSpeedandPosition) is the final branch with the new circuit that can control the motor direction and speed with the same power op-amp
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/20cd809a-c99d-4089-b9d3-5112d78ea389)
+
+Here is the absolute encoder disc I made :
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/3a39aea4-c9a1-4ee9-b9cb-12f12a874bce)
+
+it's an 8 bit ablsute encoder which is using gray code to have less error on reading the position.
+
+I've used some cheap IR transmitter and receiver diodes and made some stand for it as below 
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/d7253a9e-6cf3-47bf-94c1-d6eb6e021538)
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/b9a6b2e8-80f2-4b77-b6c5-c1a1f589ade0)
+
+and of course you'll find all my 3d designs in the 3d model folder
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/f2638fc8-4490-4602-8e82-0bcc4846bebf)
+
 
 </details>
+
+
 <details>
 
 <summary>Tools I've used</summary>
