@@ -81,4 +81,12 @@ and of course you'll find all my 3d designs in the 3d model folder
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/f2638fc8-4490-4602-8e82-0bcc4846bebf)
 
 
+Position Control Results
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/56048859-b444-448b-9eeb-58d91945d017)
+
+Velocity Control Results
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/aaca1e4a-abee-4351-b845-e73383a31e21)
+
+mechanical parts not being perfect and low resolution of the encoder causes sthe fluctuations you see, otherwise it's controlling pretty good.
+
 </details>
