@@ -48,7 +48,11 @@ All models can be find in the 3D model folder
 Basic circuit for this setup (you can find it in the KiCAD folder):
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/33acaf40-8d13-43b6-b633-c8054bc4c1a9)
 
-This can do forward direction only for speed control with relative encodr
+This can do forward direction only for speed control with relative encoder.
+List of Branches:
+- [This branch](https://github.com/GhajariAli/DCMotorControl/tree/VelocityControl_GPIO_Encoder) is to read the encoder with normal GPIO 
+- [This branch](https://github.com/GhajariAli/DCMotorControl/tree/InterruptEncoder_VelocityControl) is to read the encoder with Interrupt 
+- [This branch](https://github.com/GhajariAli/DCMotorControl/tree/VelocityControl_TimerEncoderMode) is to read the encoder with Timer in Encoder Mode ( this is easiest and probably best way, the other two was just to practive and for fun of it) 
 
 </details>
 
