@@ -38,9 +38,9 @@ int messageUpdateTime=0;
 int speedUpdateTime=0;
 int uart2Free=1;
 int ToggleSetpointInput=0;
-int32_t TimerModeEncoderValue=0;
-uint32_t Timer2Counter=0;
-
+int32_t TimerModeEncoderValue=0;//used for second method of speed calc - not used anymore
+uint32_t Timer2Counter=0;//used for second method of speed calc - not used anymore
+int32_t ProcessValue=0;
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
@@ -164,13 +164,15 @@ int main(void)
   TestEncoder.PreviousEncoderValue=0;
   TestEncoder.SpeedRPM=0;
   TestEncoder.direction=CW;
-  PID.Kp=1.2;
-  PID.Ki=0.6;
-  PID.Kd=0.2;
-  PID.dt=25;
+  PID.Kp=5;
+  PID.Ki=1;
+  PID.Kd=0;
+  PID.dt=10;
   PID.integral=0;
-  PID.min_output=0;
-  PID.max_output=1000;
+  PID.min_output=400;
+  PID.max_output=600;
+  PID.min_Integral=-100;
+  PID.max_Integral= 100;
   PID.output=5000;
   PID.target=0;
   /* USER CODE END 2 */
@@ -180,16 +182,28 @@ int main(void)
 
   while (1)
   {
+	  ToggleSetpointInput=3;
+	  //read Encoder
+	  GetEncoderValue(&TestEncoder);
 	  //reading SBUS from remote controller and writing PWM output
 	  if (!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){
 		  while(!HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin)){}
-		  if (ToggleSetpointInput==0){ToggleSetpointInput=1;}
-		  else if (ToggleSetpointInput==1){
+		  if (ToggleSetpointInput==3){
 			  ToggleSetpointInput=0;
-			  PID.target=-250;
+		  }
+		  else ToggleSetpointInput++;
+		  if (ToggleSetpointInput==2){
+			  PID.target=250;
 		  }
 	  }
-	  if (ToggleSetpointInput){
+	  switch (ToggleSetpointInput) {
+	  case 0://get speed command from remote controller
+		  PID.target = 0 ;
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  PID.ControlMode=Velocity;
+		  break;
+	  case 1:
+		  PID.ControlMode=Velocity;
 		  if (receivedSBUS.ch[1]>1000 && receivedSBUS.ch[1]<2000){
 			  PID.target = 2* ( receivedSBUS.ch[1]-1000);
 		  }
@@ -199,27 +213,43 @@ int main(void)
 		  else{
 			  PID.target=0;
 		  }
-	  }
-	  else if(!ToggleSetpointInput){
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  break;
+	  case 2: // toggle speed automatically
+		  PID.ControlMode=Velocity;
 		  if(HAL_GetTick()-speedUpdateTime>=10000){
 	 		  if(PID.target==-250) PID.target=250;
 	 		  else if (PID.target==250) PID.target=-250;
 	 		  speedUpdateTime=HAL_GetTick();
 		  }
+		  ProcessValue= TestEncoder.SpeedRPM;
+		  break;
+	  case 3: //Position control
+
+		  if (receivedSBUS.ch[2]>180 && receivedSBUS.ch[2]<2000){
+		  		PID.target = receivedSBUS.ch[2]/10;
+		  }
+		  else{
+			  PID.target=0;
+		  }
+
+		  PID.ControlMode=Position;
+		  ProcessValue= TestEncoder.GrayCode;
+		  break;
 	  }
-	  GetEncoderValue(&TestEncoder);
+
 	  //Calculate RPM
 	  if (HAL_GetTick()-SystemTime>=(PID.dt)){
 		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*(1000/PID.dt)*60/256;//1000/dt for converting to pulse per second - 60 for 1sec to 1min - 256 for pules/rev - for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
 		  SystemTime=HAL_GetTick();
-		  updatePID(&PID, TestEncoder.SpeedRPM);
+		  updatePID(&PID, ProcessValue);
 		  __HAL_TIM_SET_COMPARE(&htim1,TIM_CHANNEL_1,PID.output);
 	  }
 	  if (HAL_GetTick()-messageUpdateTime>=50){
 		  char message[100];
 		  int messagaLen=0;
-		  messagaLen=sprintf(&message,"G1=%ld, G2=%f,G3=%ld T1=%ld ,\n",TestEncoder.SpeedRPM,PID.target,93750000/Timer2Counter,messageUpdateTime);
+		  messagaLen=sprintf(&message,"G1=%ld, G2=%f,G3=%ld T1=%ld ,\n",ProcessValue,PID.target,93750000/Timer2Counter,messageUpdateTime);
 		  if (uart2Free==1){
 			  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
 			  uart2Free=0;

@@ -14,6 +14,7 @@ typedef struct{
 	int IT_EncoderChA,IT_EncoderChB; //used with interrupt only
 	int EncoderRawValue;
 	int PreviusGrayCode;
+	int GrayCode;
 	enum direction direction;
 	int32_t EncoderValue ;
 	int32_t PreviousEncoderValue;

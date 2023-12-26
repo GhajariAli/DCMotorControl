@@ -3,7 +3,7 @@
 
 void GetEncoderValue(encoder_data *encoder){
 	  int EncoderGrayConvert[8] ={0,0,0,0,0,0,0,0};
-	  int EncoderGrayCode =0;
+	  int GrayCode=0;
 	  int GrayMSBDetected = 0;
 	  //reading encoder value as gray code
 #ifdef ENCODER_GPIO_MODE
@@ -29,14 +29,14 @@ void GetEncoderValue(encoder_data *encoder){
 	              else EncoderGrayConvert[index]=1;
 	          }
 	  }
-	  EncoderGrayCode      =( EncoderGrayConvert[7] <<7 |
-			  	  	  	  	  EncoderGrayConvert[6] <<6 |
-							  EncoderGrayConvert[5] <<5 |
-							  EncoderGrayConvert[4] <<4 |
-							  EncoderGrayConvert[3] <<3 |
-							  EncoderGrayConvert[2] <<2 |
-							  EncoderGrayConvert[1] <<1 |
-							  EncoderGrayConvert[0]) & 0b11111111;;
+	  encoder->GrayCode  = GrayCode =((   EncoderGrayConvert[7] <<7 |
+										  EncoderGrayConvert[6] <<6 |
+										  EncoderGrayConvert[5] <<5 |
+										  EncoderGrayConvert[4] <<4 |
+										  EncoderGrayConvert[3] <<3 |
+										  EncoderGrayConvert[2] <<2 |
+										  EncoderGrayConvert[1] <<1 |
+										  EncoderGrayConvert[0]) & 0b11111111);
 #endif
 #ifdef ENCODER_INTERRUPT_MODE
 	  EncoderGrayCode = GrayCodeConvert[(encoder->IT_EncoderChA <<1 | encoder->IT_EncoderChB) & 0x03];
@@ -44,9 +44,9 @@ void GetEncoderValue(encoder_data *encoder){
 
 #ifndef ENCODER_TIMER_MODE //the value will be written in main.c in timer interrupt function
 	  //if encoder value updated
-	  if (encoder->PreviusGrayCode != EncoderGrayCode){
+	  if (encoder->PreviusGrayCode != GrayCode){
 		  int EncoderDeltaValue;
-		  EncoderDeltaValue = EncoderGrayCode-encoder->PreviusGrayCode;
+		  EncoderDeltaValue = GrayCode-encoder->PreviusGrayCode;
 		  if (EncoderDeltaValue<0) {EncoderDeltaValue+=4;}
 		  if (EncoderDeltaValue ==1) {
 			  encoder->direction=CW;
@@ -56,7 +56,7 @@ void GetEncoderValue(encoder_data *encoder){
 			  encoder->direction=CCW;
 			  encoder->EncoderValue--;
 		  }
-		  encoder->PreviusGrayCode=EncoderGrayCode;
+		  encoder->PreviusGrayCode=GrayCode;
 	 }
 #else
 	  if (encoder->EncoderValue >=0){ encoder->direction = CW;}
