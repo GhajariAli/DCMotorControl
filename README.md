@@ -72,10 +72,17 @@ Here is the absolute encoder disc I made :
 
 it's an 8 bit ablsute encoder which is using gray code to have less error on reading the position.
 
-I've used some cheap IR transmitter and receiver diodes and made some stand for it as below 
+I've used some cheap IR transmitter and receiver diodes and made some sort of a stand for it as below 
 
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/d7253a9e-6cf3-47bf-94c1-d6eb6e021538)
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/b9a6b2e8-80f2-4b77-b6c5-c1a1f589ade0)
+
+The IR sensors can be purcahsed [here](https://www.aliexpress.com/item/1005005371811048.html?spm=a2g0o.order_list.order_list_main.21.61131802yJksCa)
+
+and you can easily drive them with 1k resistor on transmitter and 10k on receiver ( no amplification or comparator needed for 3.3V logic level )
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/4360179f-9dc4-40a9-8811-b82201a7bc36)
+
 
 and of course you'll find all my 3d designs in the 3d model folder
 
