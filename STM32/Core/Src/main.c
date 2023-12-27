@@ -178,6 +178,7 @@ int main(void)
   PID.max_Integral= 500;
   PID.output=5000;
   PID.target=0;
+  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_SET);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -260,7 +261,7 @@ int main(void)
 	 		  if(PID.target==-250) PID.target=250;
 	 		  else if (PID.target==250) PID.target=-250;
 	 		  speedUpdateTime=HAL_GetTick();
-	 		  HAL_GPIO_TogglePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin);
+
 		  }
 		  ProcessValue= TestEncoder.SpeedRPM;
 		  PreviousOperationMode=OperationMode;
