@@ -89,4 +89,10 @@ Velocity Control Results
 
 mechanical parts not being perfect and low resolution of the encoder causes sthe fluctuations you see, otherwise it's controlling pretty good.
 
+
+Watch Here:
+
+[![Watch the video](https://github.com/GhajariAli/DCMotorControl/assets/124516346/60ce2fbe-5a5f-4591-ae94-699c1e67483c)](https://www.youtube.com/shorts/_Hv775r4zMI)
+[![Watch the video](https://github.com/GhajariAli/DCMotorControl/assets/124516346/6c1456e1-f630-407c-bc6f-1cc9cc5b1091)](https://www.youtube.com/shorts/p1Zbr400qCg)
+
 </details>
