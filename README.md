@@ -33,7 +33,7 @@ I'll try to capture my Journey in getting a better understanding of a Motor Cont
 
 <details>
 
-<summary>First Setup</summary>
+<summary>First Setup - Forward Direction Only</summary>
 
 Just to make things more fun I've started with the encoder mentioned above and made this setup: 
 
@@ -58,12 +58,14 @@ List of Branches:
 
 <details>
 
-<summary>Second Setup</summary>
+<summary>Second Setup - Bidirectional Control</summary>
 
 in order to have both position and velocity control I moved to an absolute encodr and I made it myself!
 [This branch](https://github.com/GhajariAli/DCMotorControl/tree/BidirectionSpeedandPosition) is the final branch with the new circuit that can control the motor direction and speed with the same power op-amp
 
-![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/ca79caab-8a6e-41de-89c6-7366266dfb4b)
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/1d7c5da1-f85f-43ca-9fe2-f99b7e6cc64b)
+
 
 
 Here is the absolute encoder disc I made :
@@ -72,14 +74,35 @@ Here is the absolute encoder disc I made :
 
 it's an 8 bit ablsute encoder which is using gray code to have less error on reading the position.
 
-I've used some cheap IR transmitter and receiver diodes and made some stand for it as below 
+I've used some cheap IR transmitter and receiver diodes and made some sort of a stand for it as below 
 
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/d7253a9e-6cf3-47bf-94c1-d6eb6e021538)
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/b9a6b2e8-80f2-4b77-b6c5-c1a1f589ade0)
+
+The IR sensors can be purcahsed [here](https://www.aliexpress.com/item/1005005371811048.html?spm=a2g0o.order_list.order_list_main.21.61131802yJksCa)
+
+and you can easily drive them with 1k resistor on transmitter and 10k on receiver ( no amplification or comparator needed for 3.3V logic level )
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/4360179f-9dc4-40a9-8811-b82201a7bc36)
+
 
 and of course you'll find all my 3d designs in the 3d model folder
 
 ![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/f2638fc8-4490-4602-8e82-0bcc4846bebf)
 
+
+Position Control Results
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/56048859-b444-448b-9eeb-58d91945d017)
+
+Velocity Control Results
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/aaca1e4a-abee-4351-b845-e73383a31e21)
+
+mechanical parts not being perfect and low resolution of the encoder causes sthe fluctuations you see, otherwise it's controlling pretty good.
+
+
+Watch Here:
+
+[![Watch the video](https://github.com/GhajariAli/DCMotorControl/assets/124516346/60ce2fbe-5a5f-4591-ae94-699c1e67483c)](https://www.youtube.com/shorts/_Hv775r4zMI)
+[![Watch the video](https://github.com/GhajariAli/DCMotorControl/assets/124516346/6c1456e1-f630-407c-bc6f-1cc9cc5b1091)](https://www.youtube.com/shorts/p1Zbr400qCg)
 
 </details>
