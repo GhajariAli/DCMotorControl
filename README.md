@@ -63,7 +63,8 @@ List of Branches:
 in order to have both position and velocity control I moved to an absolute encodr and I made it myself!
 [This branch](https://github.com/GhajariAli/DCMotorControl/tree/BidirectionSpeedandPosition) is the final branch with the new circuit that can control the motor direction and speed with the same power op-amp
 
-![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/20cd809a-c99d-4089-b9d3-5112d78ea389)
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/1d7c5da1-f85f-43ca-9fe2-f99b7e6cc64b)
+
 
 Here is the absolute encoder disc I made :
 
