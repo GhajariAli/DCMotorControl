@@ -33,7 +33,7 @@ I'll try to capture my Journey in getting a better understanding of a Motor Cont
 
 <details>
 
-<summary>First Setup</summary>
+<summary>First Setup - Forward Direction Only</summary>
 
 Just to make things more fun I've started with the encoder mentioned above and made this setup: 
 
@@ -58,7 +58,7 @@ List of Branches:
 
 <details>
 
-<summary>Second Setup</summary>
+<summary>Second Setup - Bidirectional Control</summary>
 
 in order to have both position and velocity control I moved to an absolute encodr and I made it myself!
 [This branch](https://github.com/GhajariAli/DCMotorControl/tree/BidirectionSpeedandPosition) is the final branch with the new circuit that can control the motor direction and speed with the same power op-amp
