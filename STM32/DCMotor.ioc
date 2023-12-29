@@ -1,8 +1,12 @@
 #MicroXplorer Configuration settings - do not modify
 ADC1.Channel-6\#ChannelRegularConversion=ADC_CHANNEL_1
-ADC1.IPParameters=Rank-6\#ChannelRegularConversion,master,Channel-6\#ChannelRegularConversion,SamplingTime-6\#ChannelRegularConversion,NbrOfConversionFlag
+ADC1.ContinuousConvMode=DISABLE
+ADC1.IPParameters=Rank-6\#ChannelRegularConversion,master,Channel-6\#ChannelRegularConversion,SamplingTime-6\#ChannelRegularConversion,NbrOfConversionFlag,ContinuousConvMode,InjNumberOfConversion,Resolution,NbrOfConversion
+ADC1.InjNumberOfConversion=0
+ADC1.NbrOfConversion=1
 ADC1.NbrOfConversionFlag=1
 ADC1.Rank-6\#ChannelRegularConversion=1
+ADC1.Resolution=ADC_RESOLUTION_12B
 ADC1.SamplingTime-6\#ChannelRegularConversion=ADC_SAMPLETIME_3CYCLES
 ADC1.master=1
 CAD.formats=
@@ -69,6 +73,7 @@ Mcu.UserConstants=
 Mcu.UserName=STM32F411RETx
 MxCube.Version=6.10.0
 MxDb.Version=DB.6.0.100
+NVIC.ADC_IRQn=true\:0\:0\:false\:false\:true\:true\:true\:true
 NVIC.BusFault_IRQn=true\:0\:0\:false\:false\:true\:true\:false\:false
 NVIC.DMA2_Stream2_IRQn=true\:0\:0\:false\:false\:true\:false\:true\:true
 NVIC.DebugMonitor_IRQn=true\:0\:0\:false\:false\:true\:true\:false\:false
