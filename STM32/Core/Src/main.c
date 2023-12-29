@@ -39,8 +39,9 @@ int speedUpdateTime=0;
 int uart2Free=1;
 int OperationMode=0;
 int PreviousOperationMode=0;
-int32_t TimerModeEncoderValue=0;//used for second method of speed calc - not used anymore
-uint32_t Timer2Counter=0;//used for second method of speed calc - not used anymore
+uint32_t Timer2Counter=0;
+int ADCReadingInProgress=0;
+uint32_t MotorVoltageRaw=0;
 int32_t ProcessValue=0;
 int ModuloSetpoint;
 int ModuloFeedback;
@@ -67,17 +68,6 @@ UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart1_rx;
 
 /* USER CODE BEGIN PV */
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin){
-	if (GPIO_Pin == Encoder_0_Pin){
-		uint32_t CounterTemp;
-		CounterTemp=  __HAL_TIM_GET_COUNTER(&htim2);
-		if (CounterTemp>20000){
-			Timer2Counter =CounterTemp;
-			__HAL_TIM_SET_COUNTER(&htim2,0);
-		}
-
-	}
-}
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	if (huart == &huart1){
 		ParseSBUS(&receivedSBUS);
@@ -160,6 +150,7 @@ int main(void)
   HAL_UART_Receive_DMA(&huart1, &receivedSBUS.ReceivedData[0], SBUS_LEN);
   HAL_TIM_Base_Start_IT(&htim1);
   HAL_TIM_Base_Start(&htim2);
+  HAL_ADC_Start(&hadc1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   SystemTime=HAL_GetTick();
   TestEncoder.PreviusGrayCode=0;
@@ -270,6 +261,30 @@ int main(void)
 	  }
 
 	  //Calculate RPM
+	  //with motor Voltage
+
+	  Timer2Counter=__HAL_TIM_GET_COUNTER(&htim2);
+	  if (Timer2Counter>=1000000 || ADCReadingInProgress){//every 100 @ 100MHZ will be 1 micro-second so 1000000 will be 10ms
+		  if (ADCReadingInProgress==0){
+			  __HAL_TIM_SET_COUNTER(&htim2,0);
+		  }
+		  ADCReadingInProgress= __HAL_TIM_GET_COUNTER(&htim2);
+		  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_RESET);
+		  if (ADCReadingInProgress>=15000){//wait 150 usec before reading ADC
+			  int ADCStatus=10;
+			  ADCStatus=HAL_ADC_PollForConversion(&hadc1,1);
+			  if(ADCStatus==0){
+				  MotorVoltageRaw=HAL_ADC_GetValue(&hadc1);
+				  HAL_ADC_Start(&hadc1);
+				  __HAL_TIM_SET_COUNTER(&htim2,0);
+				  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_SET);
+				  ADCReadingInProgress=0;
+			  }
+		  }
+
+
+	  }
+	  //with Encoder
 	  if (HAL_GetTick()-SystemTime>=(PID.dt)){
 		  TestEncoder.SpeedRPM=(TestEncoder.EncoderValue-TestEncoder.PreviousEncoderValue)*(1000/PID.dt)*60/256;//1000/dt for converting to pulse per second - 60 for 1sec to 1min - 256 for pules/rev - for gray code to pulse
 		  TestEncoder.PreviousEncoderValue=TestEncoder.EncoderValue;
@@ -645,10 +660,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(Encoder_0_GPIO_Port, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
