@@ -106,3 +106,11 @@ Watch Here:
 [![Watch the video](https://github.com/GhajariAli/DCMotorControl/assets/124516346/6c1456e1-f630-407c-bc6f-1cc9cc5b1091)](https://www.youtube.com/shorts/p1Zbr400qCg)
 
 </details>
+
+</details>
+
+<details>
+
+<summary>Improvements - Speed control by Voltage reading</summary>
+
+</details>
