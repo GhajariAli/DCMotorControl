@@ -1,6 +1,6 @@
 ../Core/Src/main.c:71:6:HAL_UART_RxCpltCallback	16	static
 ../Core/Src/main.c:76:6:HAL_UART_TxCpltCallback	16	static
-../Core/Src/main.c:119:5:main	160	static
+../Core/Src/main.c:119:5:main	168	static
 ../Core/Src/main.c:317:6:SystemClock_Config	88	static
 ../Core/Src/main.c:364:13:MX_ADC1_Init	24	static
 ../Core/Src/main.c:416:13:MX_TIM1_Init	96	static

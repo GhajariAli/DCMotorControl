@@ -270,7 +270,7 @@ int main(void)
 		  }
 		  ADCReadingInProgress= __HAL_TIM_GET_COUNTER(&htim2);
 		  HAL_GPIO_WritePin(Motor_Enable_GPIO_Port, Motor_Enable_Pin, GPIO_PIN_RESET);
-		  if (ADCReadingInProgress>=15000){//wait 150 usec before reading ADC
+		  if (ADCReadingInProgress>=25000){//wait 250 usec before reading ADC
 			  int ADCStatus=10;
 			  ADCStatus=HAL_ADC_PollForConversion(&hadc1,1);
 			  if(ADCStatus==0){
@@ -295,7 +295,7 @@ int main(void)
 	  if (HAL_GetTick()-messageUpdateTime>=50){
 		  char message[100];
 		  int messagaLen=0;
-		  messagaLen=sprintf(&message,"G1=%ld, G2=%f,G3=%d, G4=%d T1=%d ,\n",ProcessValue,PID.target,ModuloSetpoint,ModuloFeedback,messageUpdateTime);
+		  messagaLen=sprintf(&message,"Spd=%ld, SpdSet=%f,PosSet=%d, PosFB=%d, Volt=%d T=%d ,\n",ProcessValue,PID.target,ModuloSetpoint,ModuloFeedback,(MotorVoltageRaw*6/10)-1200,messageUpdateTime);
 		  if (uart2Free==1){
 			  HAL_UART_Transmit_IT(&huart2, message, messagaLen);
 			  uart2Free=0;
