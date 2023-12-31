@@ -107,8 +107,26 @@ Watch Here:
 
 </details>
 
+
 <details>
 
 <summary>Improvements - Speed control by Voltage reading</summary>
+
+[This](https://github.com/GhajariAli/DCMotorControl.git) is the branch for this feature. some improvement and correction in the main circuit that will be merged into the [main](https://github.com/GhajariAli/DCMotorControl.git) 
+
+Here is the new circuit - you'll find it in the KiCAD folder MotorControl-V2
+
+![Screenshot 2023-12-30 154358](https://github.com/GhajariAli/DCMotorControl/assets/124516346/9a8aefbf-4b26-46f2-9619-1ba71fb7877f)
+
+Here is How it looks on the scope, I'm disabling the power op-amp for around 300 usec and read the voltage after some level shifting and clipping in channel 1 of the ADC. 
+the big pulse is the op-amp enable pulse and the blue line is the motor voltage to condition and read by ADC:
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/a5f18245-aee8-41d3-a7d2-d0fc13cc4237)
+
+here is the speed reading results, red is the encoder feedback and blue is the voltage reading, notice it's clipped as I decided to not scale it down with voltage divider since it already had lots of fluctuation and noise. also some delay due the wait time in the mcu ( to let the self induce voltage caused by cutting motor current to dampen) 
+
+![image](https://github.com/GhajariAli/DCMotorControl/assets/124516346/6d04716e-1fe5-472d-9075-7b38c0853c62)
+
+as nice at it looks, I decided not to use this as a control feedback as the encoder works mych better:) but it's fun doing it.
 
 </details>

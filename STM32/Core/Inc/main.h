@@ -89,7 +89,6 @@ void Error_Handler(void);
 #define Encoder_5_GPIO_Port GPIOB
 #define Encoder_0_Pin GPIO_PIN_8
 #define Encoder_0_GPIO_Port GPIOB
-#define Encoder_0_EXTI_IRQn EXTI9_5_IRQn
 #define Encoder_1_Pin GPIO_PIN_9
 #define Encoder_1_GPIO_Port GPIOB
 
