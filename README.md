@@ -107,7 +107,6 @@ Watch Here:
 
 </details>
 
-</details>
 
 <details>
 
