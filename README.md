@@ -130,3 +130,6 @@ here is the speed reading results, red is the encoder feedback and blue is the v
 as nice at it looks, I decided not to use this as a control feedback as the encoder works mych better:) but it's fun doing it.
 
 </details>
+
+
+Stay Tuned, AC Induction Motor is next!
