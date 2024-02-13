@@ -133,3 +133,6 @@ as nice at it looks, I decided not to use this as a control feedback as the enco
 
 
 Stay Tuned, AC Induction Motor is next!
+
+Update: [Here](https://github.com/GhajariAli/InductionMotorControl)https://github.com/GhajariAli/InductionMotorControl is the Induction Motor Repo
+
